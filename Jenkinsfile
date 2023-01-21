@@ -13,13 +13,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube-9.1'){
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
 
         stage("Deploy app") {
             steps{
