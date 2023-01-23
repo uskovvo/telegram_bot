@@ -1,0 +1,16 @@
+[Unit]
+Description=Simple Telegram Spring Bot
+After=syslog.target network.target
+
+[Service]
+SuccessExitStatus=143
+
+User=valerii
+Group=valerii
+
+Type=simple
+
+ExecStart=/usr/bin/java -jar /home/valerii/bots/telegram_bot-0.0.1-SNAPSHOT.jar
+
+[Install]
+WantedBy=multi-user.target
