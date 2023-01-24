@@ -33,11 +33,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static final String YES = "YES_BUTTON";
     private static final String NO = "NO_BUTTON";
     private final BotConfig botConfig;
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
     private static final String HELP_TEXT = "I can't help you";
 
-    public TelegramBot(BotConfig botConfig) {
+    public TelegramBot(BotConfig botConfig, @Autowired UserRepository userRepository) {
+        this.userRepository = userRepository;
         this.botConfig = botConfig;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
@@ -118,7 +118,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setChatId(chatId);
         message.setText(textToSend);
 
-        /** Начало создания экранной клавиатуры в боте **/
+        /* Начало создания экранной клавиатуры в боте **/
 
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 
@@ -141,7 +141,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         message.setReplyMarkup(keyboardMarkup);
 
-        /** конец создания клавиатуры **/
+        /* конец создания клавиатуры **/
 
         try {
             execute(message);
