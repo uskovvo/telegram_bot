@@ -16,6 +16,8 @@ public class UserEntity {
     private String userName;
     private Timestamp registeredAt;
 
+    private UserType userType;
+
     @OneToMany(mappedBy = "userEntity")
     private List<OrderEntity> orders;
 
@@ -57,6 +59,22 @@ public class UserEntity {
 
     public void setRegisteredAt(Timestamp registeredAt) {
         this.registeredAt = registeredAt;
+    }
+
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+
+    public List<OrderEntity> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<OrderEntity> orders) {
+        this.orders = orders;
     }
 
     @Override

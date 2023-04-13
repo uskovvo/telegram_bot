@@ -1,6 +1,7 @@
 package com.example.telegram_bot.service;
 
 import com.example.telegram_bot.config.BotConfig;
+import com.example.telegram_bot.model.ConstantButton;
 import com.github.sinboun.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +27,15 @@ import java.util.List;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
+    private static final LocalTime MORNING = LocalTime.of(5, 59);
+    private static final LocalTime AFTERNOON = LocalTime.of(9, 59);
+    private static final LocalTime EVENING = LocalTime.of(16, 59);
+    private static final LocalTime NIGHT = LocalTime.of(21, 59);
     private static final String ERROR_OCCURRED = "Error occurred: ";
-    private static final String YES = "YES_BUTTON";
-    private static final String NO = "NO_BUTTON";
     private final BotConfig botConfig;
     private final UserService userService;
+
+    private static final String HI_MESSAGE = "Привет! Я ваш помощник. Для начала нажмите /start";
     private static final String HELP_TEXT = "I can't help you";
 
     public TelegramBot(BotConfig botConfig, UserService userService) {
@@ -74,10 +82,10 @@ public class TelegramBot extends TelegramLongPollingBot {
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callBackData.equals(YES)) {
+            if (callBackData.equals(ConstantButton.YES_BUTTON.name())) {
                 String yes = "You press YES BUTTON";
                 getEditMessageText(messageId, chatId, yes);
-            } else if (callBackData.equals(NO)) {
+            } else if (callBackData.equals(ConstantButton.NO_BUTTON.name())) {
                 String no = "You press NO BUTTON";
                 getEditMessageText(messageId, chatId, no);
             }
@@ -89,13 +97,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botConfig.getBotName();
     }
 
-    private List<BotCommand> getListBotCommand(){
+    private List<BotCommand> getListBotCommand() {
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
 //        listOfCommands.add(new BotCommand("/register", "set your settings"));
 //        listOfCommands.add(new BotCommand("/mydata", "show your data stored"));
 //        listOfCommands.add(new BotCommand("/deletedata", "delete my data"));
-//        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
 //        listOfCommands.add(new BotCommand("/settings", "set your preferences"));
 
         return listOfCommands;
@@ -115,7 +123,18 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(Long chatId, String firstName) {
-        String answer = EmojiParser.parseToUnicode("Hi, " + firstName + ", nice to me you" + " :fire:");
+        LocalTime timeOfDay = LocalTime.now();
+        String answer = "";
+        if(timeOfDay.isAfter(NIGHT)) {
+            answer = EmojiParser.parseToUnicode("Доброй ночи, " + firstName + ", я вам помогу создать заявку :fire:");
+        } else if(timeOfDay.isAfter(EVENING)) {
+            answer = EmojiParser.parseToUnicode("Добрый вечер, " + firstName + ", я вам помогу создать заявку :fire:");
+        } else if(timeOfDay.isAfter(MORNING)) {
+            answer = EmojiParser.parseToUnicode("Доброе утро, " + firstName + ", я вам помогу создать заявку :fire:");
+        } else if(timeOfDay.isAfter(AFTERNOON)){
+            answer = EmojiParser.parseToUnicode("Добрый день, " + firstName + ", я вам помогу создать заявку :fire:");
+        }
+
         log.info("Replied to User: " + firstName);
         sendMessage(chatId, answer);
     }
@@ -171,11 +190,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
         var buttonYes = new InlineKeyboardButton();
         buttonYes.setText("Yes");
-        buttonYes.setCallbackData(YES);
+        buttonYes.setCallbackData(ConstantButton.YES_BUTTON.name());
 
         var buttonNo = new InlineKeyboardButton();
         buttonNo.setText("No");
-        buttonNo.setCallbackData(NO);
+        buttonNo.setCallbackData(ConstantButton.NO_BUTTON.name());
 
         rowInLine.add(buttonYes);
         rowInLine.add(buttonNo);
