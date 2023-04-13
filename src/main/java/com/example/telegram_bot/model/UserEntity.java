@@ -1,13 +1,13 @@
 package com.example.telegram_bot.model;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity(name = "usersData")
-public class User {
+public class UserEntity {
 
     @Id
     private Long chatId;
@@ -15,6 +15,9 @@ public class User {
     private String lastName;
     private String userName;
     private Timestamp registeredAt;
+
+    @OneToMany(mappedBy = "userEntity")
+    private List<OrderEntity> orders;
 
     public Long getChatId() {
         return chatId;
