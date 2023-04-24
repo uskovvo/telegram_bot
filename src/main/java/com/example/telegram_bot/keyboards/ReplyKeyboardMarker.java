@@ -1,4 +1,4 @@
-package com.example.telegram_bot.model;
+package com.example.telegram_bot.keyboards;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -13,8 +13,9 @@ public class ReplyKeyboardMarker {
 
     public ReplyKeyboardMarkup getMainMenuKeyboard(){
         KeyboardRow firstLine = new KeyboardRow();
-        firstLine.add(new KeyboardButton("Хочу монтаж"));
-        firstLine.add(new KeyboardButton("Позвони мне"));
+        KeyboardButton one = new KeyboardButton();
+        firstLine.add(new KeyboardButton(ConstantButton.WANT_SETUP.getButton()));
+        firstLine.add(new KeyboardButton(ConstantButton.CALL_ME.getButton()));
 
         List<KeyboardRow> keyboardRowList = new ArrayList<>();
         keyboardRowList.add(firstLine);

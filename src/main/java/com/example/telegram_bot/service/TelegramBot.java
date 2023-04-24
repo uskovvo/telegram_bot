@@ -1,7 +1,7 @@
 package com.example.telegram_bot.service;
 
 import com.example.telegram_bot.config.BotConfig;
-import com.example.telegram_bot.model.ConstantButton;
+import com.example.telegram_bot.keyboards.ConstantButton;
 import com.github.sinboun.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,30 +17,22 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
-
-    private static final LocalTime MORNING = LocalTime.of(5, 59);
-    private static final LocalTime AFTERNOON = LocalTime.of(9, 59);
-    private static final LocalTime EVENING = LocalTime.of(16, 59);
-    private static final LocalTime NIGHT = LocalTime.of(21, 59);
     private static final String ERROR_OCCURRED = "Error occurred: ";
     private final BotConfig botConfig;
     private final UserService userService;
+    private final BotSendMessage botSendMessage;
+    private static final String HELP_TEXT = "Чтобы начать общаться со мной наберите /start";
 
-    private static final String HI_MESSAGE = "Привет! Я ваш помощник. Для начала нажмите /start";
-    private static final String HELP_TEXT = "I can't help you";
-
-    public TelegramBot(BotConfig botConfig, UserService userService) {
+    public TelegramBot(BotConfig botConfig, UserService userService, BotSendMessage botSendMessage) {
         this.botConfig = botConfig;
         this.userService = userService;
+        this.botSendMessage = botSendMessage;
 
         try {
             this.execute(new SetMyCommands(getListBotCommand(), new BotCommandScopeDefault(), null));
@@ -58,34 +50,24 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
-            Long chatId = update.getMessage().getChatId();
-            String firstName = update.getMessage().getChat().getFirstName();
-            Message message = update.getMessage();
 
-            switch (messageText) {
-                case "/start":
-                    registerUser(message);
-                    startCommandReceived(chatId, firstName);
-                    break;
-                case "/help":
-                    sendMessage(chatId, HELP_TEXT);
-                    break;
-                case "/register":
-                    register(chatId);
-                    break;
-                default:
-                    String defaultMessage = EmojiParser.parseToUnicode("Sorry :disappointed:");
-                    sendMessage(chatId, defaultMessage);
+            if(messageText.equals(ConstantButton.START.getButton())){
+                startCommandReceived(update);
+            } else if (messageText.equals(ConstantButton.WANT_SETUP.getButton())) {
+                /* TODO: реализуй это!!! */
+            } else if (messageText.equals(ConstantButton.CALL_ME.getButton())) {
+                helpCommandReceived(update);
             }
+
         } else if (update.hasCallbackQuery()) {
             String callBackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callBackData.equals(ConstantButton.YES_BUTTON.name())) {
+            if (callBackData.equals(ConstantButton.WANT_SETUP.getButton())) {
                 String yes = "You press YES BUTTON";
                 getEditMessageText(messageId, chatId, yes);
-            } else if (callBackData.equals(ConstantButton.NO_BUTTON.name())) {
+            } else if (callBackData.equals(ConstantButton.CALL_ME.getButton())) {
                 String no = "You press NO BUTTON";
                 getEditMessageText(messageId, chatId, no);
             }
@@ -99,12 +81,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private List<BotCommand> getListBotCommand() {
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "get a welcome message"));
-//        listOfCommands.add(new BotCommand("/register", "set your settings"));
-//        listOfCommands.add(new BotCommand("/mydata", "show your data stored"));
-//        listOfCommands.add(new BotCommand("/deletedata", "delete my data"));
-        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
-//        listOfCommands.add(new BotCommand("/settings", "set your preferences"));
+        listOfCommands.add(new BotCommand(ConstantButton.START.getButton(), "get a welcome message"));
 
         return listOfCommands;
     }
@@ -122,52 +99,26 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void startCommandReceived(Long chatId, String firstName) {
-        LocalTime timeOfDay = LocalTime.now();
-        String answer = "";
-        if(timeOfDay.isAfter(NIGHT)) {
-            answer = EmojiParser.parseToUnicode("Доброй ночи, " + firstName + ", я вам помогу создать заявку :fire:");
-        } else if(timeOfDay.isAfter(EVENING)) {
-            answer = EmojiParser.parseToUnicode("Добрый вечер, " + firstName + ", я вам помогу создать заявку :fire:");
-        } else if(timeOfDay.isAfter(MORNING)) {
-            answer = EmojiParser.parseToUnicode("Доброе утро, " + firstName + ", я вам помогу создать заявку :fire:");
-        } else if(timeOfDay.isAfter(AFTERNOON)){
-            answer = EmojiParser.parseToUnicode("Добрый день, " + firstName + ", я вам помогу создать заявку :fire:");
+    private void startCommandReceived(Update update) {
+        try {
+            execute(botSendMessage.getStartMessage(update.getMessage()));
+        } catch (TelegramApiException e) {
+            log.error(ERROR_OCCURRED + e.getMessage());
         }
+    }
 
-        log.info("Replied to User: " + firstName);
-        sendMessage(chatId, answer);
+    private void helpCommandReceived(Update update) {
+        try {
+            execute(botSendMessage.getHelpMessage(update.getMessage()));
+        } catch (TelegramApiException e) {
+            log.error(ERROR_OCCURRED + e.getMessage());
+        }
     }
 
     private void sendMessage(Long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(textToSend);
-
-        /* Начало создания экранной клавиатуры в боте **/
-
-//        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-//
-//        List<KeyboardRow> keyboardRows = new ArrayList<>();
-//
-//        KeyboardRow row = new KeyboardRow();
-//        row.add("weather");
-//        row.add("get random joke");
-//
-//        keyboardRows.add(row);
-//
-//        row = new KeyboardRow();
-//
-//        row.add("check my data");
-//        row.add("delete my data");
-//
-//        keyboardRows.add(row);
-//
-//        keyboardMarkup.setKeyboard(keyboardRows);
-//
-//        message.setReplyMarkup(keyboardMarkup);
-
-        /* конец создания клавиатуры **/
 
         try {
             execute(message);
@@ -190,11 +141,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
         var buttonYes = new InlineKeyboardButton();
         buttonYes.setText("Yes");
-        buttonYes.setCallbackData(ConstantButton.YES_BUTTON.name());
+        buttonYes.setCallbackData(ConstantButton.WANT_SETUP.getButton());
 
         var buttonNo = new InlineKeyboardButton();
         buttonNo.setText("No");
-        buttonNo.setCallbackData(ConstantButton.NO_BUTTON.name());
+        buttonNo.setCallbackData(ConstantButton.CALL_ME.getButton());
 
         rowInLine.add(buttonYes);
         rowInLine.add(buttonNo);

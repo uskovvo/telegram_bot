@@ -1,6 +1,17 @@
-package com.example.telegram_bot.model;
+package com.example.telegram_bot.keyboards;
 
 public enum ConstantButton {
-    YES_BUTTON,
-    NO_BUTTON
+    START("/start"),
+    WANT_SETUP("Хочу монтаж"),
+    CALL_ME("Позвони мне");
+
+    private final String button;
+
+    ConstantButton(String button) {
+        this.button = button;
+    }
+
+    public String getButton() {
+        return button;
+    }
 }

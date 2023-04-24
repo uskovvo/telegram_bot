@@ -1,4 +1,6 @@
-package com.example.telegram_bot.model;
+package com.example.telegram_bot.model.userPackage;
+
+import com.example.telegram_bot.model.orderPackage.OrderEntity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

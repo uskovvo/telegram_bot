@@ -1,9 +1,9 @@
 package com.example.telegram_bot.service;
 
-import com.example.telegram_bot.model.OrderEntity;
-import com.example.telegram_bot.model.OrderRepository;
-import com.example.telegram_bot.model.UserEntity;
-import com.example.telegram_bot.model.UserRepository;
+import com.example.telegram_bot.model.orderPackage.OrderEntity;
+import com.example.telegram_bot.model.orderPackage.OrderRepository;
+import com.example.telegram_bot.model.userPackage.UserEntity;
+import com.example.telegram_bot.model.userPackage.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

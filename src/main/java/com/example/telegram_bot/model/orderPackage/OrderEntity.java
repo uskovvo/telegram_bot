@@ -1,4 +1,6 @@
-package com.example.telegram_bot.model;
+package com.example.telegram_bot.model.orderPackage;
+
+import com.example.telegram_bot.model.userPackage.UserEntity;
 
 import javax.persistence.*;
 import java.sql.Timestamp;

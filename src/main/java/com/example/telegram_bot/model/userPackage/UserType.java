@@ -1,4 +1,4 @@
-package com.example.telegram_bot.model;
+package com.example.telegram_bot.model.userPackage;
 
 public enum UserType {
     ADMIN,
