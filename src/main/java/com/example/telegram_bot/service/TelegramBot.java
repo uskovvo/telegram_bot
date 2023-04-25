@@ -2,7 +2,6 @@ package com.example.telegram_bot.service;
 
 import com.example.telegram_bot.config.BotConfig;
 import com.example.telegram_bot.keyboards.ConstantButton;
-import com.github.sinboun.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -13,8 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -27,7 +24,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig botConfig;
     private final UserService userService;
     private final BotSendMessage botSendMessage;
-    private static final String HELP_TEXT = "Чтобы начать общаться со мной наберите /start";
+    private String textFromUser;
 
     public TelegramBot(BotConfig botConfig, UserService userService, BotSendMessage botSendMessage) {
         this.botConfig = botConfig;
@@ -51,27 +48,38 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
 
-            if(messageText.equals(ConstantButton.START.getButton())){
+            if (messageText.equals(ConstantButton.START.getButton())) {
                 startCommandReceived(update);
             } else if (messageText.equals(ConstantButton.WANT_SETUP.getButton())) {
-                /* TODO: реализуй это!!! */
+                setupCommandReceived(update, ConstantButton.WANT_SETUP.getButton());
             } else if (messageText.equals(ConstantButton.CALL_ME.getButton())) {
                 helpCommandReceived(update);
-            }
+            } else if (messageText.equals(ConstantButton.YES.getButton())) {
 
-        } else if (update.hasCallbackQuery()) {
-            String callBackData = update.getCallbackQuery().getData();
-            long messageId = update.getCallbackQuery().getMessage().getMessageId();
-            long chatId = update.getCallbackQuery().getMessage().getChatId();
-
-            if (callBackData.equals(ConstantButton.WANT_SETUP.getButton())) {
-                String yes = "You press YES BUTTON";
-                getEditMessageText(messageId, chatId, yes);
-            } else if (callBackData.equals(ConstantButton.CALL_ME.getButton())) {
-                String no = "You press NO BUTTON";
-                getEditMessageText(messageId, chatId, no);
+            } else if (checkUserMessage(update)) {
+                textFromUser = update.getMessage().getText();
+                setupCommandReceived(update, ConstantButton.YES.getButton());
             }
         }
+//        else if (update.hasCallbackQuery()) {
+//            String callBackData = update.getCallbackQuery().getData();
+//            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+//            long chatId = update.getCallbackQuery().getMessage().getChatId();
+//
+//            if (callBackData.equals(ConstantButton.READY.getButton())) {
+//                CheckMessage checkMessage = new CheckMessage();
+//                String one = update.getCallbackQuery().getMessage().getText();
+//                String yes = "You press YES BUTTON";
+//                getEditMessageText(messageId, chatId, one);
+//            } else if (callBackData.equals(ConstantButton.CANCEL.getButton())) {
+//                String no = "Вы ничего не ввели";
+//                getEditMessageText(messageId, chatId, no);
+//            }
+//        }
+    }
+
+    private boolean checkUserMessage(Update update) {
+        return CheckMessage.checkUserMessage(update.getMessage().getText());
     }
 
     @Override
@@ -107,6 +115,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private void setupCommandReceived(Update update, String button) {
+        SendMessage sendMessage = new SendMessage();
+        if (button.equals(ConstantButton.WANT_SETUP.getButton())) {
+            sendMessage = botSendMessage.setupDiscuss(update.getMessage());
+        } else if (button.equals(ConstantButton.YES.getButton())) {
+            sendMessage = botSendMessage.sendMessageWhereWriteUser(update.getMessage());
+        }
+
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            log.error(ERROR_OCCURRED + e.getMessage());
+        }
+    }
+
     private void helpCommandReceived(Update update) {
         try {
             execute(botSendMessage.getHelpMessage(update.getMessage()));
@@ -115,50 +138,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendMessage(Long chatId, String textToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(textToSend);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException ex) {
-            log.error(ERROR_OCCURRED + ex.getMessage());
-        }
-    }
-
     private void registerUser(Message message) {
         userService.userRegistration(message);
-    }
-
-    private void register(Long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Do you really want to register?");
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        var buttonYes = new InlineKeyboardButton();
-        buttonYes.setText("Yes");
-        buttonYes.setCallbackData(ConstantButton.WANT_SETUP.getButton());
-
-        var buttonNo = new InlineKeyboardButton();
-        buttonNo.setText("No");
-        buttonNo.setCallbackData(ConstantButton.CALL_ME.getButton());
-
-        rowInLine.add(buttonYes);
-        rowInLine.add(buttonNo);
-
-        rowsInLine.add(rowInLine);
-
-        inlineKeyboardMarkup.setKeyboard(rowsInLine);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException ex) {
-            log.error(ERROR_OCCURRED + ex.getMessage());
-        }
     }
 }

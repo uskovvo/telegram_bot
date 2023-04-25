@@ -17,6 +17,19 @@ public class ReplyKeyboardMarker {
         firstLine.add(new KeyboardButton(ConstantButton.WANT_SETUP.getButton()));
         firstLine.add(new KeyboardButton(ConstantButton.CALL_ME.getButton()));
 
+        return getReplyKeyboardMarkup(firstLine);
+    }
+
+    public ReplyKeyboardMarkup getReadyOrCancelKeyboard(){
+        KeyboardRow firstLine = new KeyboardRow();
+        KeyboardButton one = new KeyboardButton();
+        firstLine.add(new KeyboardButton(ConstantButton.YES.getButton()));
+        firstLine.add(new KeyboardButton(ConstantButton.CANCEL.getButton()));
+
+        return getReplyKeyboardMarkup(firstLine);
+    }
+
+    private ReplyKeyboardMarkup getReplyKeyboardMarkup(KeyboardRow firstLine) {
         List<KeyboardRow> keyboardRowList = new ArrayList<>();
         keyboardRowList.add(firstLine);
 

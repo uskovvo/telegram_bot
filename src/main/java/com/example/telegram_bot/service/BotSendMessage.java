@@ -1,12 +1,12 @@
 package com.example.telegram_bot.service;
 
+import com.example.telegram_bot.keyboards.InlineKeyboardMarker;
 import com.example.telegram_bot.keyboards.ReplyKeyboardMarker;
 import com.github.sinboun.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.time.LocalTime;
 
@@ -26,7 +26,6 @@ public class BotSendMessage {
 
     public SendMessage getStartMessage(Message message) {
         LocalTime timeOfDay = LocalTime.now();
-        String messageText = message.getText();
         Long chatId = message.getChatId();
         String nickName = message.getChat().getUserName();
         String answer = "";
@@ -56,6 +55,35 @@ public class BotSendMessage {
         infoMessage.setText("Хай ёпта");
 
         return infoMessage;
+    }
+
+    public SendMessage setupDiscuss(Message message) {
+        SendMessage discuss = new SendMessage();
+        discuss.setChatId(message.getChatId());
+        discuss.setText("Укажите ваши ФИО и номер телефона в формате: " +
+                "\n\n\t\t\t\t" +
+                "Иванов Иван Иванович +7 777 777 77 77");
+//        discuss.setReplyMarkup(replyKeyboardMarker.getReadyOrCancelKeyboard());
+
+        return discuss;
+    }
+
+    public SendMessage sendMessageWhereWriteUser(Message message){
+        SendMessage userMessage = new SendMessage();
+        userMessage.setChatId(message.getChatId());
+        userMessage.setText("Вы указали следующие данные: " +
+                "\n\n\t\t\t\t" +
+                message.getText() +
+                "\n\n" +
+                "Все верно?");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        userMessage.setReplyMarkup(replyKeyboardMarker.getReadyOrCancelKeyboard());
+
+        return userMessage;
     }
 
     public SendMessage getHelpMessage(Message message){

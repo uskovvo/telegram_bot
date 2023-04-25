@@ -15,10 +15,11 @@ public class UserEntity {
     private Long chatId;
     private String firstName;
     private String lastName;
+    private String patronymic;
     private String userName;
     private Timestamp registeredAt;
-
     private UserType userType;
+    private String phoneNumber;
 
     @OneToMany(mappedBy = "userEntity")
     private List<OrderEntity> orders;
@@ -45,6 +46,14 @@ public class UserEntity {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getPatronymic() {
+        return patronymic;
+    }
+
+    public void setPatronymic(String patronymic) {
+        this.patronymic = patronymic;
     }
 
     public String getUserName() {
@@ -77,6 +86,14 @@ public class UserEntity {
 
     public void setOrders(List<OrderEntity> orders) {
         this.orders = orders;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     @Override
