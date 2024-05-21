@@ -1,6 +1,5 @@
 package com.example.telegram_bot.service;
 
-import com.example.telegram_bot.keyboards.InlineKeyboardMarker;
 import com.example.telegram_bot.keyboards.ReplyKeyboardMarker;
 import com.github.sinboun.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
